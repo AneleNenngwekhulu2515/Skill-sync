@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import pwinput
 
 load_dotenv()
-
+print("hi")
 
 firebaseConfig = {
     'apiKey': os.getenv('API_KEY'),
