@@ -1,6 +1,6 @@
 import click
 from auth import signup, login
-from firebase_config import firebase
+# from firebase_config import firebase
 
 @click.group()
 def cli():

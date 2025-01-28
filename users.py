@@ -1,15 +1,15 @@
 import click
-from firebase_admin import firestore
-from firebase_config import firebase
+# from firebase_admin import firestore
+# from firebase_config import firebase
 import firebase_admin
 import sys
-from firebase_admin import credentials
+# from firebase_admin import credentials
 
 # cred = credentials.ertificate('path_to_service_account_key.json')
 # firebase_admin.initialize_app(cred)
-db = firestore.client()
+# db = firestore.client()
 
-def save_user_role(uid, role):
+def save_user_role(uid, role, db):
     """
     Save users role
     """
@@ -23,7 +23,6 @@ def save_user_role(uid, role):
             "role": role
         })
         click.echo(f"Role '{role}' assigned to user")
-        return
     except Exception as e:
         click.echo(f"Error saving user role: {e}")
         sys.exit(1)

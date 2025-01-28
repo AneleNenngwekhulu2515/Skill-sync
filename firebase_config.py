@@ -1,6 +1,8 @@
 import pyrebase
 import os
 from dotenv import load_dotenv
+import firebase_admin
+# from firebase_admin import credentials, firestore
 
 load_dotenv()
 
@@ -17,4 +19,24 @@ firebaseConfig = {
 }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
+
+def auth_service():
+    return firebase.auth()
+
+db = None
+
+def initialize_firebase_admin():
+  global db
+  cred_path = os.getenv('SERVICE_ACCOUNT_KEY_PATH')
+  if cred_path:
+      cred = firebase_admin.credentials.Certificate(cred_path)
+      firebase_admin.initialize_app(cred)
+      db = firebase_admin.firestore.client() # Initialize db here
+  else:
+    print("Error: SERVICE_ACCOUNT_KEY_PATH environment variable not set")
+
+
+def get_firestore_client():
+    if db is None:
+      initialize_firebase_admin()
+    return db if db else None
