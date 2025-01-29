@@ -26,14 +26,19 @@ def auth_service():
 db = None
 
 def initialize_firebase_admin():
-  global db
-  cred_path = os.getenv('SERVICE_ACCOUNT_KEY_PATH')
-  if cred_path:
-      cred = firebase_admin.credentials.Certificate(cred_path)
-      firebase_admin.initialize_app(cred)
-      db = firebase_admin.firestore.client() # Initialize db here
-  else:
-    print("Error: SERVICE_ACCOUNT_KEY_PATH environment variable not set")
+    global db
+    cred_path = os.getenv('SERVICE_ACCOUNT_KEY_PATH')
+    if cred_path:
+        try:
+            cred = firebase_admin.credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            db = firebase_admin.firestore.client()  # Initialize db here
+        except Exception as e:
+            print(f"Error initializing Firebase Admin: {e}")
+            db = None  # Set db to None in case of failure
+    else:
+        print("Error: SERVICE_ACCOUNT_KEY_PATH environment variable not set")
+        db = None
 
 
 def get_firestore_client():

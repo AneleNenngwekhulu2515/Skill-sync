@@ -14,8 +14,8 @@ def signup(email):
     if not check_password_strength(password):
         click.echo("Password is weak. Try again with a stronger password.")
         return
-
     try:
+
         user = auth_service().create_user_with_email_and_password(email, password)
         uid = user['localId']
         role = click.prompt("Enter your role (mentor/peer)", type=str)
