@@ -8,6 +8,7 @@ import inspect
 from google.oauth2 import service_account
 import logging
 
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
@@ -24,19 +25,17 @@ firebaseConfig = {
 }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
 
-def auth_service():
-    return firebase.auth()
-
-# Initialize Firebase Admin SDK
 def initialize_firebase_admin():
+  global _db
   cred_path = os.getenv('SERVICE_ACCOUNT_KEY_PATH')
   if not cred_path:
-    print("Error: SERVICE_ACCOUNT_KEY_PATH environment variable not set")
+    logging.error("Error: SERVICE_ACCOUNT_KEY_PATH environment variable not set")
     return None
   
   if not os.path.exists(cred_path):
-      print(f"Error: Service account key file not found at: {cred_path}")
+      logging.error(f"Error: Service account key file not found at: {cred_path}")
       return None
 
   try:
@@ -47,10 +46,10 @@ def initialize_firebase_admin():
     db = firestore.Client(credentials=gc_cred)
     return db
   except Exception as e:
-    print(f"Error initializing Firebase Admin: {e}, type: {type(e)}, arguments: {e.args}")
+    logging.error(f"Error initializing Firebase Admin: {e}, type: {type(e)}, arguments: {e.args}")
     return None
 
-# global variable for db client
+
 _db = None
 
 def get_firestore_client():

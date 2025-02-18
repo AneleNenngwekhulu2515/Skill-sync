@@ -8,8 +8,6 @@ policy = PasswordPolicy.from_names(
         special = 1
 )
         
-
-
 def check_password_strength(password):
     """
     Checks if password meets the minimum strength criteria.
