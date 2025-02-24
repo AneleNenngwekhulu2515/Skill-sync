@@ -1,7 +1,7 @@
 import click
 import pwinput
-from firebase_config import get_firestore_client  # Only import get_firestore_client
-from users import save_user_role # Import save_user_role from users
+from firebase_config import get_firestore_client 
+from users import save_user_role 
 from verification import check_password_strength
 from requests.exceptions import HTTPError
 

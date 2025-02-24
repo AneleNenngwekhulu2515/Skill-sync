@@ -1,23 +1,23 @@
 import click
-from auth import signup, login  # Import signup and login functions
+from auth import signup, login  
 import logging
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 from calendar_utils import get_calendar_service, create_calendar_event, send_email
 from users import add_booking, get_bookings, cancel_booking, get_user_by_email, get_available_mentors, get_available_peers, save_user_role # Import save_user_role
 from firebase_config import get_firestore_client, firebaseConfig  # Import firebaseConfig only
 from datetime import datetime, timedelta
-import pyrebase  # Import pyrebase here
+import pyrebase 
 
 load_dotenv()
 
-# Initialize Firebase here, in app.py
+
 try:
     firebase = pyrebase.initialize_app(firebaseConfig)
     auth = firebase.auth()  # Get auth instance directly
 except Exception as e:
     print(f"Error initializing Firebase: {e}")
-    auth = None  # Or handle the error in a better way
+    auth = None 
 
 @click.group()
 def cli():
@@ -26,23 +26,26 @@ def cli():
 
 @click.command()
 @click.argument('email')
-def signup_command(email):  # Renamed to avoid confusion
+def signup_command(email):  
     """Signs up a new user."""
-    signup(email, auth)  # Pass auth object, not a function
-cli.add_command(signup_command, name="signup") # Added name argument
+    signup(email, auth)  
+cli.add_command(signup_command, name="signup") 
 
 @click.command()
 @click.argument('email')
-def login_command(email):   # Renamed to avoid confusion
-    """Logs in an existing user."""
-    login(email, auth)  # Pass auth object, not a function
 
-cli.add_command(login_command, name="login") # Added name argument
+def login_command(email):  
+    """Logs in an existing user."""
+    login(email, auth)  
+
+
+cli.add_command(login_command, name="login") 
 
 @click.command()
 @click.argument('role', type=click.Choice(['mentor', 'peer']))
 @click.argument('time')
 @click.argument('date')
+
 def book(role, time, date):
     try:
         logging.info(f"Attempting to book a {role}")
@@ -70,8 +73,7 @@ def book(role, time, date):
 
             if add_booking(booker.uid, mentor_to_book.uid, time, datetime.fromisoformat(date), db):
                 click.echo(f"Successfully booked mentor with email: {mentor_to_book.email} at {time}")
-
-                # Create Calendar event
+           
                 service = get_calendar_service()
                 if service:
                     start_time = datetime.fromisoformat(date).replace(hour=int(time.split(":")[0]), minute=int(time.split(":")[1]))

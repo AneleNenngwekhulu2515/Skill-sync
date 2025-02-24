@@ -13,19 +13,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def get_calendar_service():
     """Shows basic usage of the Google Calendar API.
     """
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
+   
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
@@ -38,7 +34,7 @@ def get_calendar_service():
             flow = InstalledAppFlow.from_client_secrets_file(
                 'path/to/your/credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
+    
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
     try:
@@ -79,17 +75,15 @@ def create_calendar_event(service, summary, start_time, end_time, attendees):
 
 def send_email(sender_email, sender_password, receiver_email, subject, message):
         try:
-            # Create a multipart message
             msg = MIMEMultipart()
             msg['From'] = sender_email
             msg['To'] = receiver_email
             msg['Subject'] = subject
 
-            # Attach the message to the email
             msg.attach(MIMEText(message, 'plain'))
-            # Setup the connection to your mail server
+            
             with smtplib.SMTP("smtp.gmail.com", 587) as server:
-               server.starttls() # Secure the connection
+               server.starttls() 
                server.login(sender_email, sender_password)
                server.send_message(msg)
             logging.info(f"Email sent successfully to: {receiver_email}")
@@ -98,6 +92,8 @@ def send_email(sender_email, sender_password, receiver_email, subject, message):
             logging.error(f"SMTP Authentication Error: {auth_error}")
         except Exception as e:
              logging.error(f"Error sending email: {e}")
+
+
 if __name__ == '__main__':
     service = get_calendar_service()
     if service:
