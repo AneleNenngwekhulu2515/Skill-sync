@@ -1,4 +1,3 @@
-#This module makes sure that the password meets the requirements
 from password_strength import PasswordPolicy
 
 policy = PasswordPolicy.from_names(
