@@ -1,6 +1,6 @@
 import click
 from auth_service import signup, login, get_user_info
-from booking_service import book_session
+from booking import book_session
 import pwinput
 
 @click.group()
@@ -34,6 +34,10 @@ def book_session_cli():
     duration = click.prompt('Enter session duration (minutes)', type=int)
 
     book_session(mentor_email, session_type, date, start_time, duration)
+
+@cli.command()
+def book_session_cmd():
+    book_session_cli()
 
 if __name__ == '__main__':
     cli()
