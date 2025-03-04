@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 import pyrebase
+import datetime
 import os
 from dotenv import load_dotenv
 
@@ -21,6 +22,7 @@ firebase_config = {
 
 firebase = pyrebase.initialize_app(firebase_config)
 db = firebase.database()
+
 
 def load_credentials():
     creds = None
@@ -42,12 +44,13 @@ def load_credentials():
 
     return creds
 
+
 def check_availability(service, mentor_email, date, start_time, duration):
     start_datetime = dt.datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M")
     end_datetime = start_datetime + dt.timedelta(minutes=duration)
 
     events = service.events().list(
-        calendarId=mentor_email,
+        calendarId="primary",
         timeMin=start_datetime.isoformat() + "Z",
         timeMax=end_datetime.isoformat() + "Z",
         singleEvents=True,
@@ -61,7 +64,33 @@ def check_availability(service, mentor_email, date, start_time, duration):
 
     return len(events) == 0
 
-def book_session(mentor_email, session_type, date, start_time, duration):
+
+def get_bookings(user_email):
+    """
+    Retrieves a list of bookings for the given user.
+    """
+    all_bookings_ref = db.child("bookings").get()
+    bookings = all_bookings_ref.val()
+
+    if not bookings:
+        return []
+
+    valid_bookings = []
+    current_date = datetime.datetime.utcnow().date()
+
+    for booking_id, booking in bookings.items():
+        booking_date = datetime.datetime.strptime(booking["date"], "%Y-%m-%d").date()
+
+        if booking_date >= current_date:
+            valid_bookings.append(booking)
+        else:
+            # Delete expired booking
+            db.child("bookings").child(booking_id).remove()
+
+    return valid_bookings
+
+
+def book_session(mentor_email, role, session_type, date, start_time, duration):
     creds = load_credentials()
     service = build("calendar", "v3", credentials=creds)
 
@@ -85,9 +114,71 @@ def book_session(mentor_email, session_type, date, start_time, duration):
     db.child("bookings").child(event_id).set({
         "mentor": mentor_email,
         "session_type": session_type,
+        "role": role,  # Store the role along with other details
         "date": date,
         "start_time": start_time,
         "duration": duration,
     })
 
-    print(f"✅ Booking successful! Event created: {created_event['htmlLink']}")
+    success = True
+    event_link = created_event.get("htmlLink", "No link available")
+
+    print(f"✅ Booking successful! Event created: {event_link}")
+    return success, event_link
+
+
+def cancel_booking(mentor_email, session_type, date, start_time):
+    """
+    Cancels a booking for the given user by email, session type, date, and start time.
+    """
+    creds = load_credentials()
+    service = build("calendar", "v3", credentials=creds)
+
+    events_result = service.events().list(
+        calendarId="primary",
+        q=f"{session_type.capitalize()} Session with {mentor_email}",
+        orderBy="startTime",
+        singleEvents=True
+    ).execute()
+
+    events = events_result.get("items", [])
+    event_to_delete = None
+
+    for event in events:
+        if (
+            event["start"]["dateTime"].startswith(date) and
+            event["start"]["dateTime"].endswith(start_time)
+        ):
+            event_to_delete = event["id"]
+            break
+
+    if not event_to_delete:
+        print("❌ Event not found in Google Calendar.")
+        return False
+
+    try:
+        service.events().delete(calendarId="primary", eventId=event_to_delete).execute()
+        print("✅ Booking successfully removed from Google Calendar!")
+        return True
+    except Exception as e:
+        print(f"❌ Error removing booking from Google Calendar: {e}")
+        return False
+
+
+def delete_expired_bookings():
+    """Remove expired bookings from the database."""
+    all_bookings_ref = db.child("bookings").get()
+    bookings = all_bookings_ref.val()
+
+    if not bookings:
+        return
+
+    current_date = datetime.datetime.utcnow().date()
+
+    for booking_id, booking in bookings.items():
+        booking_date = datetime.datetime.strptime(booking["date"], "%Y-%m-%d").date()
+
+        if booking_date < current_date:
+            db.child("bookings").child(booking_id).remove()
+            print(f"🗑️ Deleted expired booking: {booking}")
+

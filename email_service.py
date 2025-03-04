@@ -50,4 +50,4 @@ def send_booking_email(mentor_email, student_name, session_type, date, start_tim
     except Exception as e:
         print(f"❌ Error sending email: {e}")
 
-send_booking_email('nenngwekhuluanele@gmail.com', 'Khosi', 'one-one-one', '2025-02-26', '10:00', '20')
+# send_booking_email('nenngwekhuluanele@gmail.com', 'Khosi', 'one-one-one', '2025-02-26', '10:00', '20')

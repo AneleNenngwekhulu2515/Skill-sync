@@ -21,7 +21,7 @@ firebase = pyrebase.initialize_app(firebase_config)
 auth_client = firebase.auth()
 db = firebase.database()
 
-def signup(name, email, password):
+def signup(name, email, password, role):
     if not check_password_strength(password):
         print("Password is weak. Try again with a stronger password.")
         return None
@@ -32,7 +32,7 @@ def signup(name, email, password):
         
         user_id = user["localId"]
         auth_token = user["idToken"] 
-        db.child("users").child(user_id).set({"name": name, "email": email}, auth_token)
+        db.child("users").child(user_id).set({"name": name, "email": email, "role": role}, auth_token)
 
         print(f'\n✅User created successfully: {user_id}✅\n')
         return user
@@ -42,9 +42,17 @@ def signup(name, email, password):
 
 def login(email, password):
     try:
-        user = auth_client.sign_in_with_email_and_password(email, password)
-        print("\n✅ Login Successful ✅\n") 
+        user = firebase.auth().sign_in_with_email_and_password(email, password)
+
+        user_data = db.child("users").child(user['localId']).get(user['idToken']).val()  # <---- idToken here
+
+        if user_data and 'role' in user_data:
+            user['role'] = user_data['role']
+        else:
+            user['role'] = 'Unknown'
+
         return user
+    
     except Exception as e:
         print(f"\n❌ Error logging in: {e}\n")
         return None
