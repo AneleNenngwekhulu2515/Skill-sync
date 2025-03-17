@@ -74,10 +74,16 @@ def book_session_cmd():
     start_time = click.prompt('Enter start time (HH:MM, 24-hour format)')
     duration = click.prompt('Enter session duration (minutes)', type=int)
 
-    available_options = get_available_mentors(date) if role == "mentor" else get_available_peers(date, logged_in_user)
+    
+    role = role.lower()
+
+    if role == "mentor":
+        available_options = get_available_mentors(date, start_time, duration)  
+    else:
+        available_options = get_available_peers(date, start_time, duration, logged_in_user)
 
     if not available_options:
-        click.echo(f"No {role}s available for {date}. Try another date.")
+        click.echo(f"No {role}s available for {date} at {start_time}. Try another date or time.")
         return
 
     mentor_list = [(f"{mentor['name']} ({mentor['email']})", mentor["email"]) for mentor in available_options]
@@ -86,6 +92,10 @@ def book_session_cmd():
         inquirer.List("mentor_email", message="Select a mentor/peer", choices=[m[0] for m in mentor_list])
     ]
     answers = inquirer.prompt(questions)
+    if not answers:
+        click.echo("❌ No selection made.")
+        return
+
     mentor_email = next(m[1] for m in mentor_list if m[0] == answers["mentor_email"])
 
     success = book_session(mentor_email, role, date, start_time, duration)
@@ -99,7 +109,7 @@ def book_session_cmd():
 @cli.command()
 def view_bookings():
     global logged_in_user
-    delete_expired_bookings()
+    delete_expired_bookings(logged_in_user)
 
     if not logged_in_user:
         try:
