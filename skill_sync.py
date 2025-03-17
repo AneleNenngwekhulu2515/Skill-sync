@@ -46,28 +46,32 @@ def login_cli():
     else:
         click.echo("❌ Login failed.")
 
-@cli.command()
-def view_workshops():
-    workshops = list_workshops()
-    if not workshops:
-        click.echo("No workshops available.")
-    else:
-        for w in workshops:
-            click.echo(f"📅 {w['title']} - {w['date']} | Mentor: {w['mentor']}")
+# @cli.command()
+# def view_workshops():
+#     workshops = list_workshops()
+#     if not workshops:
+#         click.echo("No workshops available.")
+#     else:
+#         for w in workshops:
+#             click.echo(f"📅 {w['title']} - {w['date']} | Mentor: {w['mentor']}")
 
 @cli.command()
 def book_session_cmd():
     global logged_in_user
 
     if not logged_in_user:
-        try:
-            with open("logged_in_user.json", "r") as f:
-                logged_in_user = json.load(f)
-        except FileNotFoundError:
-            click.echo("❌ You must log in first.")
-            return
+        if not logged_in_user:
+            try:
+                with open("logged_in_user.json", "r") as f:
+                    logged_in_user = json.load(f)
+                    
+                    if not isinstance(logged_in_user, dict) or 'idToken' not in logged_in_user:
+                        click.echo("❌ Invalid user data. Please log in again.")
+                        return
+            except FileNotFoundError:
+                click.echo("❌ You must log in first.")
+                return
 
-    click.echo(f"Logged in user: {logged_in_user}")
 
     role = click.prompt('Are you booking a session with a Mentor or Peer?', type=click.Choice(['Mentor', 'Peer'], case_sensitive=False))
     date = click.prompt('Enter date (YYYY-MM-DD)')
@@ -78,9 +82,9 @@ def book_session_cmd():
     role = role.lower()
 
     if role == "mentor":
-        available_options = get_available_mentors(date, start_time, duration)  
+        available_options = get_available_mentors(date, start_time)  
     else:
-        available_options = get_available_peers(date, start_time, duration, logged_in_user)
+        available_options = get_available_peers(date, start_time, logged_in_user)
 
     if not available_options:
         click.echo(f"No {role}s available for {date} at {start_time}. Try another date or time.")
@@ -106,25 +110,25 @@ def book_session_cmd():
     else:
         click.echo("❌ Booking failed. Please try again.")
 
-@cli.command()
-def view_bookings():
-    global logged_in_user
-    delete_expired_bookings(logged_in_user)
+# @cli.command()
+# def view_bookings():
+#     global logged_in_user
+#     delete_expired_bookings(logged_in_user)
 
-    if not logged_in_user:
-        try:
-            with open("logged_in_user.json", "r") as f:
-                logged_in_user = json.load(f)
-        except FileNotFoundError:
-            click.echo("❌ You must log in first.")
-            return
+#     if not logged_in_user:
+#         try:
+#             with open("logged_in_user.json", "r") as f:
+#                 logged_in_user = json.load(f)
+#         except FileNotFoundError:
+#             click.echo("❌ You must log in first.")
+#             return
 
-    bookings = get_bookings(logged_in_user["email"])
-    if not bookings:
-        click.echo("No bookings found.")
-    else:
-        for b in bookings:
-            click.echo(f"📌 {b['session_type']} session on {b['date']} at {b['start_time']} with {b['mentor']}")
+#     bookings = get_bookings(logged_in_user["email"])
+#     if not bookings:
+#         click.echo("No bookings found.")
+#     else:
+#         for b in bookings:
+#             click.echo(f"📌 {b['session_type']} session on {b['date']} at {b['start_time']} with {b['mentor']}")
 
 @cli.command()
 def cancel_booking_cmd():
